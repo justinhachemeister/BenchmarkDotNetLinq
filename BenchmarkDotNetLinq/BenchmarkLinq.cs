@@ -12,11 +12,14 @@ namespace BenchmarkDotNetLinq
     {
         private List<Drink> _drinks;
 
+        [Params(10000, 100000)]
+        public int Size { get; set; }
+
         [GlobalSetup]
         public void Setup()
         {
             _drinks = new Fixture()
-                .CreateMany<Drink>(100000)
+                .CreateMany<Drink>(Size)
                 .ToList();
         }
 
