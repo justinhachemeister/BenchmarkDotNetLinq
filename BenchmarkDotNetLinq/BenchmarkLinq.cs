@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using AutoFixture;
 using BenchmarkDotNet.Attributes;
 
@@ -58,6 +60,67 @@ namespace BenchmarkDotNetLinq
             }
 
             return count;
+        }
+
+        [Benchmark]
+        public List<string> NonAlcoholicDrinkNamesForLoop()
+        {
+            var names = new List<string>();
+            for (var i = 0; i < _drinks.Count; i++)
+            {
+                if (!_drinks[i].IsAlcoholic)
+                {
+                    names.Add(_drinks[i].Name);
+                }
+            }
+            return names;
+        }
+
+        [Benchmark]
+        public List<string> NonAlcoholicDrinkNamesForLoopWithCapacity()
+        {
+            var names = new List<string>(_drinks.Count);
+            for (var i = 0; i < _drinks.Count; i++)
+            {
+                if (!_drinks[i].IsAlcoholic)
+                {
+                    names.Add(_drinks[i].Name);
+                }
+            }
+            return names;
+        }
+
+        [Benchmark]
+        public List<string> NonAlcoholicDrinkNamesParallelForEach()
+        {
+            var names = new ConcurrentBag<string>();
+            Parallel.ForEach(_drinks, x =>
+            {
+                if (!x.IsAlcoholic)
+                {
+                    names.Add(x.Name);
+                }
+            });
+            return names.ToList();
+        }
+
+        [Benchmark]
+        public List<string> NonAlcoholicDrinkNamesLinq()
+        {
+            return _drinks
+                .Where(x => !x.IsAlcoholic)
+                .Select(x => x.Name)
+                .ToList();
+        }
+
+        [Benchmark]
+        public List<string> NonAlcoholicDrinkNamesLinkAsParallel()
+        {
+            return _drinks
+                .AsParallel()
+                .Where(x => !x.IsAlcoholic)
+                .Select(x => x.Name)
+                .ToList();
         }
     }
 }
